@@ -13,7 +13,7 @@ module RightBranch
       @repository = options.fetch(:repository)
     end
 
-    def run
+    def run!
       old_pr = get_pr(pull_request)
       new_pr = submit_pr(old_pr, new_branch)
       update_pr(old_pr[:number], state: 'closed')
@@ -24,7 +24,8 @@ module RightBranch
     private
 
     def github
-      @github ||= Octokit::Client.new(login: username, password: password)
+      @github ||= Octokit::Client.new \
+        login: username, password: password
     end
 
     def get_pr(pr)
