@@ -32,6 +32,7 @@ module RightBranch::Commands
       options = {}
       opt_parser = build_opt_parser(options)
       opt_parser.parse!
+      fallback_to_options_from_env(options)
 
       missing = missing_opt_keys(options)
       unless missing.empty?
@@ -47,7 +48,7 @@ module RightBranch::Commands
 
     def missing_opt_keys(options)
       missing = REQUIRED_OPTIONS - options.keys
-      missing += options.select { |_, v| v.empty? }.keys
+      missing += options.select { |_, v| v.nil? || v.empty? }.keys
       missing
     end
 
@@ -83,6 +84,11 @@ module RightBranch::Commands
           options[:password] = v
         end
       end
+    end
+
+    def fallback_to_options_from_env(options)
+      options[:username] ||= ENV['RIGHT_BRANCH_USERNAME']
+      options[:repository] ||= ENV['RIGHT_BRANCH_REPOSITORY']
     end
   end
 end
