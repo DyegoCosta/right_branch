@@ -1,5 +1,6 @@
 # Right Branch
 
+[![Gem version](http://img.shields.io/gem/v/right_branch.svg)](https://rubygems.org/gems/right_branch)
 [![Build Status](https://travis-ci.org/DyegoCosta/right_branch.svg?branch=master)](https://travis-ci.org/DyegoCosta/right_branch)
 
 Currently GitHub does not support switching the target branch of a Pull Request. This tool helps to do that in case a PR is submitted against a wrong branch.
