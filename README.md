@@ -9,7 +9,7 @@ Currently GitHub does not support switching the target branch of a Pull Request.
 Install gem:
 
 ```
-$ gem install pliny
+$ gem install right_branch
 ```
 
 Usage:
