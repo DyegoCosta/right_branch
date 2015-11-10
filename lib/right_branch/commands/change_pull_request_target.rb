@@ -5,7 +5,7 @@ require_relative '../updater'
 
 module RightBranch::Commands
   class ChangePullRequestTarget
-    REQUIRED_OPTIONS = %i(username repository new_branch pull_request)
+    REQUIRED_OPTIONS = [:username, :repository, :new_branch, :pull_request]
 
     attr_accessor :stream
 
