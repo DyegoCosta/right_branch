@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+
+require 'optparse'
+require 'highline/import'
+require_relative '../lib/right_branch/updater'
+
+REQUIRED_OPTIONS = %i(username repository new_branch pull_request)
+options = {}
+
+opt_parser = OptionParser.new do |opts|
+  opts.banner = 'Usage: right_branch [options]'
+
+  opts.on("-u", "--username USERNAME", "Username") do |v|
+    options[:username] = v
+  end
+
+  opts.on("-r", "--repository REPOSITORY", "Repository") do |v|
+    options[:repository] = v
+  end
+
+  opts.on("-b", "--new-branch NEW_BRANCH", "New branch") do |v|
+    options[:new_branch] = v
+  end
+
+  opts.on("-p", "--pull-request PULL_REQUEST", "Pull request") do |v|
+    options[:pull_request] = v
+  end
+
+  opts.on("--password PASSWORD", "Password") do |v|
+    options[:password] = v
+  end
+end
+
+opt_parser.parse!
+
+missing = REQUIRED_OPTIONS - options.keys
+missing += options.select { |_, v| v.empty? }.keys
+
+unless missing.empty?
+  abort "Missing required options: #{missing.join(', ')}\n\n#{opt_parser}"
+end
+
+if String(options[:password]).empty?
+  options[:password] = ask("Enter your password: ") { |q| q.echo = '*' }
+end
+
+RightBranch::Updater.new(options).run
