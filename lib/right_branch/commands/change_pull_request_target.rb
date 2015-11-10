@@ -5,7 +5,7 @@ require_relative '../updater'
 
 module RightBranch::Commands
   class ChangePullRequestTarget
-    REQUIRED_OPTIONS = [:username, :repository, :new_branch, :pull_request]
+    REQUIRED_OPTIONS = [:repository, :new_branch, :pull_request]
 
     attr_accessor :stream
 
@@ -19,7 +19,13 @@ module RightBranch::Commands
 
     def run!
       options = build_options
-      updater(options).run!
+
+      attrs = {
+        credentials: build_credentials(options),
+        repository: options[:repository]
+      }
+
+      updater(attrs).run!(options[:pull_request], options[:new_branch])
     rescue ::Octokit::Unauthorized
       abort 'Invalid credentials to update pull request'
     rescue ::Octokit::UnprocessableEntity
@@ -39,25 +45,40 @@ module RightBranch::Commands
         abort missing_key_abort_message(missing, opt_parser)
       end
 
-      if String(options[:password]).empty?
-        options[:password] = ask("Enter your password: ") { |q| q.echo = '*' }
+      if prompt_for_password?(options)
+        options[:password] = ask('Enter your password: ') { |q| q.echo = '*' }
       end
 
       options
     end
 
+    def prompt_for_password?(options)
+      String(options[:access_token]).empty? &&
+        String(options[:password]).empty?
+    end
+
+    def build_credentials(options)
+      if options[:access_token].to_s.empty?
+        { login: options[:username], password: options[:password] }
+      else
+        { access_token: options[:access_token] }
+      end
+    end
+
     def missing_opt_keys(options)
       missing = REQUIRED_OPTIONS - options.keys
-      missing += options.select { |_, v| v.nil? || v.empty? }.keys
-      missing
+      required_blank = options.select do |k, v|
+        REQUIRED_OPTIONS.include?(k) && String(v).empty?
+      end
+      missing += required_blank.keys
     end
 
     def missing_key_abort_message(keys, opt_parser)
       "Missing required options: #{keys.join(', ')}\n\n#{opt_parser}"
     end
 
-    def updater(options)
-      RightBranch::Updater.new(options)
+    def updater(attrs)
+      RightBranch::Updater.new(attrs)
     end
 
     def build_opt_parser(options)
@@ -80,6 +101,10 @@ module RightBranch::Commands
           options[:pull_request] = v
         end
 
+        opts.on("-t", "--access-token ACCESS_TOKEN", "Access token") do |v|
+          options[:access_token] = v
+        end
+
         opts.on("--password PASSWORD", "Password") do |v|
           options[:password] = v
         end
@@ -89,6 +114,7 @@ module RightBranch::Commands
     def fallback_to_options_from_env(options)
       options[:username] ||= ENV['RIGHT_BRANCH_USERNAME']
       options[:repository] ||= ENV['RIGHT_BRANCH_REPOSITORY']
+      options[:access_token] ||= ENV['RIGHT_BRANCH_ACCESS_TOKEN']
     end
   end
 end

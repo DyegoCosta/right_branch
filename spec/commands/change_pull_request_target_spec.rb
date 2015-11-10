@@ -73,4 +73,20 @@ describe RightBranch::Commands::ChangePullRequestTarget do
         "Missing required options: a, b\n\nwow"
     end
   end
+
+  describe '#build_credentials' do
+    it 'returns access token if present' do
+      actual = subject.send :build_credentials,
+        access_token: 'omg', username: 'doge', password: 'wow'
+
+      expect(actual).to eq({ access_token: 'omg'})
+    end
+
+    it 'returns username and password if no access token is present' do
+      actual = subject.send :build_credentials,
+        username: 'doge', password: 'wow'
+
+      expect(actual).to eq({ login: 'doge', password: 'wow' })
+    end
+  end
 end

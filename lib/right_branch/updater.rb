@@ -2,34 +2,30 @@ require 'octokit'
 
 module RightBranch
   class Updater
-    attr_reader :username, :password, :pull_request,
-      :new_branch, :repository
+    attr_reader :credentials, :repository
 
     def initialize(options)
-      @username = options.fetch(:username)
-      @password = options.fetch(:password)
-      @pull_request = options.fetch(:pull_request)
-      @new_branch = options.fetch(:new_branch)
-      @repository = options.fetch(:repository)
+      @repository = options[:repository]
+      @credentials = options[:credentials]
     end
 
-    def run!
-      old_pr = get_pr(pull_request)
-      new_pr = submit_pr(old_pr, new_branch)
-      update_pr(old_pr[:number], state: 'closed')
-      comment_on_issue old_pr[:number] ,
+    def run!(old_pr_number, new_branch)
+      new_pr = resubmit_pr(old_pr_number, new_branch)
+
+      update_pr(old_pr_number, state: 'closed')
+
+      comment_on_issue old_pr_number ,
         "Reopened against `#{new_branch}` (##{new_pr.number})"
     end
 
     private
 
     def github
-      @github ||= Octokit::Client.new \
-        login: username, password: password
+      @github ||= Octokit::Client.new(credentials)
     end
 
-    def get_pr(pr)
-      github.pull_request(repository, pr)
+    def get_pr(pr_number)
+      github.pull_request(repository, pr_number)
     end
 
     def comment_on_issue(number, comment)
@@ -40,13 +36,15 @@ module RightBranch
       github.update_pull_request(repository, number, args)
     end
 
-    def submit_pr(pr, new_branch)
+    def resubmit_pr(old_pr_number, new_branch)
+      old_pr = get_pr(old_pr_number)
+
       github.create_pull_request \
         repository,
         new_branch,
-        pr[:head][:label],
-        pr[:title],
-        pr[:body]
+        old_pr[:head][:label],
+        old_pr[:title],
+        old_pr[:body]
     end
   end
 end
