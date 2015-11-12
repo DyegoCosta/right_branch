@@ -9,12 +9,12 @@ module RightBranch
       @credentials = options[:credentials]
     end
 
-    def run!(old_pr_number, new_branch)
-      new_pr = resubmit_pr(old_pr_number, new_branch)
+    def run!(original_pr_number, new_branch)
+      new_pr = resubmit_pr(original_pr_number, new_branch)
 
-      update_pr(old_pr_number, state: 'closed')
+      update_pr(original_pr_number, state: 'closed')
 
-      comment_on_issue old_pr_number ,
+      comment_on_issue original_pr_number ,
         "Reopened against `#{new_branch}` (##{new_pr.number})"
     end
 
@@ -36,15 +36,15 @@ module RightBranch
       github.update_pull_request(repository, number, args)
     end
 
-    def resubmit_pr(old_pr_number, new_branch)
-      old_pr = get_pr(old_pr_number)
+    def resubmit_pr(original_pr_number, new_branch)
+      original_pr = get_pr(original_pr_number)
 
       github.create_pull_request \
         repository,
         new_branch,
-        old_pr[:head][:label],
-        old_pr[:title],
-        old_pr[:body]
+        original_pr[:head][:label],
+        original_pr[:title],
+        original_pr[:body]
     end
   end
 end
